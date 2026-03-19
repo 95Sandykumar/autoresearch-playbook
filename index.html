@@ -1,0 +1,1613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoResearch: How to Improve Any Metric on Autopilot | Sandeep Kumar</title>
+    <meta name="description" content="The framework behind 700 autonomous experiments, 20 discovered optimizations, and a 19% performance gain overnight. A complete playbook by Sandeep Kumar.">
+    <meta name="author" content="Sandeep Kumar">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="AutoResearch: How to Improve Any Metric on Autopilot">
+    <meta property="og:description" content="The Karpathy Loop that runs 100 experiments while you sleep. 700 autonomous experiments. 20 discovered optimizations. 19% performance gain overnight.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="AutoResearch: How to Improve Any Metric on Autopilot">
+    <meta name="twitter:description" content="The Karpathy Loop that runs 100 experiments while you sleep.">
+
+    <style>
+        /* ===== RESET & BASE ===== */
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0F172A;
+            --bg-secondary: #1E293B;
+            --bg-tertiary: #334155;
+            --bg-card: #1a2332;
+            --accent: #3B82F6;
+            --accent-hover: #2563EB;
+            --accent-glow: rgba(59, 130, 246, 0.15);
+            --accent-border: rgba(59, 130, 246, 0.3);
+            --text-primary: #F8FAFC;
+            --text-secondary: #94A3B8;
+            --text-muted: #64748B;
+            --border: #1E293B;
+            --border-light: rgba(148, 163, 184, 0.1);
+            --code-bg: #0D1117;
+            --success: #22C55E;
+            --warning: #F59E0B;
+            --gradient-start: #3B82F6;
+            --gradient-end: #8B5CF6;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            font-size: 16px;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* ===== SCROLLBAR ===== */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        /* ===== LAYOUT ===== */
+        .container {
+            max-width: 780px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* ===== HERO / HEADER ===== */
+        .hero {
+            padding: 80px 0 48px;
+            border-bottom: 1px solid var(--border-light);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -200px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            background: var(--accent-glow);
+            border: 1px solid var(--accent-border);
+            border-radius: 100px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--accent);
+            letter-spacing: 0.02em;
+            margin-bottom: 24px;
+        }
+
+        .hero-badge svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .hero h1 {
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 800;
+            line-height: 1.15;
+            letter-spacing: -0.03em;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            font-size: clamp(1.05rem, 2.5vw, 1.25rem);
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 32px;
+            max-width: 640px;
+        }
+
+        .hero-meta {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .author-block {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .author-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1rem;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .author-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .author-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+        }
+
+        .author-name a {
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .author-name a:hover {
+            color: var(--accent);
+        }
+
+        .author-detail {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .meta-divider {
+            width: 1px;
+            height: 32px;
+            background: var(--border-light);
+        }
+
+        .reading-time {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .reading-time svg {
+            width: 16px;
+            height: 16px;
+            color: var(--text-muted);
+        }
+
+        /* ===== SHARE BAR ===== */
+        .share-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 20px 0;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .share-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-right: 4px;
+        }
+
+        .share-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 8px 14px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .share-btn:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border-color: var(--accent-border);
+        }
+
+        .share-btn svg {
+            width: 15px;
+            height: 15px;
+        }
+
+        .share-btn.copied {
+            background: rgba(34, 197, 94, 0.1);
+            border-color: rgba(34, 197, 94, 0.3);
+            color: var(--success);
+        }
+
+        /* ===== TABLE OF CONTENTS ===== */
+        .toc {
+            margin: 40px 0;
+            padding: 28px 32px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            position: relative;
+        }
+
+        .toc::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(180deg, var(--gradient-start), var(--gradient-end));
+            border-radius: 12px 0 0 12px;
+        }
+
+        .toc-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+
+        .toc-list {
+            list-style: none;
+            counter-reset: toc-counter;
+        }
+
+        .toc-list li {
+            counter-increment: toc-counter;
+            margin-bottom: 4px;
+        }
+
+        .toc-list li a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 7px 12px;
+            border-radius: 6px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 450;
+            transition: all 0.15s;
+        }
+
+        .toc-list li a::before {
+            content: counter(toc-counter, decimal-leading-zero);
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            font-variant-numeric: tabular-nums;
+            min-width: 20px;
+        }
+
+        .toc-list li a:hover {
+            background: rgba(59, 130, 246, 0.08);
+            color: var(--accent);
+        }
+
+        .toc-list li a:hover::before {
+            color: var(--accent);
+        }
+
+        /* ===== ARTICLE BODY ===== */
+        .article {
+            padding: 48px 0 64px;
+        }
+
+        .article h2 {
+            font-size: 1.75rem;
+            font-weight: 750;
+            letter-spacing: -0.02em;
+            margin-top: 64px;
+            margin-bottom: 8px;
+            padding-top: 32px;
+            border-top: 1px solid var(--border-light);
+            color: var(--text-primary);
+        }
+
+        .article h2:first-child {
+            margin-top: 0;
+            padding-top: 0;
+            border-top: none;
+        }
+
+        .article h3 {
+            font-size: 1.25rem;
+            font-weight: 650;
+            letter-spacing: -0.01em;
+            margin-top: 36px;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+
+        .article p {
+            margin-bottom: 20px;
+            color: var(--text-secondary);
+            font-size: 1.05rem;
+            line-height: 1.8;
+        }
+
+        .article strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .article em {
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        .article a {
+            color: var(--accent);
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: border-color 0.2s;
+        }
+
+        .article a:hover {
+            border-bottom-color: var(--accent);
+        }
+
+        /* ===== HIGHLIGHT BOX ===== */
+        .highlight-box {
+            margin: 32px 0;
+            padding: 24px 28px;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(139, 92, 246, 0.06));
+            border: 1px solid var(--accent-border);
+            border-radius: 12px;
+            font-size: 1.05rem;
+            line-height: 1.7;
+            color: var(--text-secondary);
+        }
+
+        .highlight-box strong {
+            color: var(--text-primary);
+        }
+
+        /* ===== STAT CARDS ===== */
+        .stat-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin: 28px 0;
+        }
+
+        .stat-card {
+            padding: 20px 24px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.2;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* ===== ORDERED LISTS ===== */
+        .article ol {
+            margin: 16px 0 24px;
+            padding-left: 0;
+            list-style: none;
+            counter-reset: step-counter;
+        }
+
+        .article ol li {
+            counter-increment: step-counter;
+            margin-bottom: 12px;
+            padding-left: 40px;
+            position: relative;
+            color: var(--text-secondary);
+            font-size: 1.05rem;
+            line-height: 1.7;
+        }
+
+        .article ol li::before {
+            content: counter(step-counter);
+            position: absolute;
+            left: 0;
+            top: 2px;
+            width: 26px;
+            height: 26px;
+            background: var(--accent-glow);
+            border: 1px solid var(--accent-border);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .article ul {
+            margin: 16px 0 24px;
+            padding-left: 24px;
+            list-style: none;
+        }
+
+        .article ul li {
+            margin-bottom: 10px;
+            padding-left: 16px;
+            position: relative;
+            color: var(--text-secondary);
+            font-size: 1.05rem;
+            line-height: 1.7;
+        }
+
+        .article ul li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 12px;
+            width: 6px;
+            height: 6px;
+            background: var(--accent);
+            border-radius: 50%;
+        }
+
+        /* ===== TABLES ===== */
+        .table-wrap {
+            margin: 24px 0;
+            overflow-x: auto;
+            border-radius: 10px;
+            border: 1px solid var(--border-light);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.92rem;
+        }
+
+        thead {
+            background: var(--bg-secondary);
+        }
+
+        thead th {
+            padding: 14px 18px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        tbody td {
+            padding: 14px 18px;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border-light);
+            line-height: 1.5;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        tbody tr:hover {
+            background: rgba(59, 130, 246, 0.04);
+        }
+
+        tbody td strong {
+            color: var(--text-primary);
+        }
+
+        /* ===== CODE BLOCKS ===== */
+        .code-block {
+            margin: 24px 0;
+            background: var(--code-bg);
+            border: 1px solid var(--border-light);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .code-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 16px;
+            background: rgba(255,255,255,0.03);
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .code-lang {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .code-dots {
+            display: flex;
+            gap: 6px;
+        }
+
+        .code-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--bg-tertiary);
+        }
+
+        .code-dot:nth-child(1) { background: #FF5F57; }
+        .code-dot:nth-child(2) { background: #FEBC2E; }
+        .code-dot:nth-child(3) { background: #28C840; }
+
+        pre {
+            padding: 20px 24px;
+            overflow-x: auto;
+            font-size: 0.88rem;
+            line-height: 1.7;
+        }
+
+        code {
+            font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, 'Courier New', monospace;
+            color: #E2E8F0;
+        }
+
+        /* Inline code */
+        .article p code,
+        .article li code,
+        .article td code {
+            padding: 2px 7px;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.15);
+            border-radius: 4px;
+            font-size: 0.88em;
+            color: var(--accent);
+        }
+
+        /* Syntax colors */
+        .token-comment { color: #6A737D; }
+        .token-keyword { color: #FF7B72; }
+        .token-string { color: #A5D6FF; }
+        .token-function { color: #D2A8FF; }
+        .token-number { color: #79C0FF; }
+        .token-flag { color: #FFA657; }
+
+        /* ===== SCENARIO CARDS ===== */
+        .scenario-card {
+            margin: 28px 0;
+            padding: 28px 32px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            position: relative;
+        }
+
+        .scenario-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
+            border-radius: 12px 12px 0 0;
+        }
+
+        .scenario-card h4 {
+            font-size: 1.1rem;
+            font-weight: 650;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+        }
+
+        .scenario-card p {
+            font-size: 0.98rem;
+        }
+
+        /* ===== NUMBERED STEPS BOX ===== */
+        .steps-box {
+            margin: 28px 0;
+            padding: 28px 32px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+        }
+
+        .steps-box h4 {
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--accent);
+            margin-bottom: 20px;
+        }
+
+        /* ===== CALLOUT ===== */
+        .callout {
+            margin: 28px 0;
+            padding: 20px 24px;
+            background: rgba(245, 158, 11, 0.06);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            border-radius: 10px;
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+        }
+
+        .callout-icon {
+            flex-shrink: 0;
+            width: 24px;
+            height: 24px;
+            color: var(--warning);
+            margin-top: 2px;
+        }
+
+        .callout p {
+            margin-bottom: 0;
+            font-size: 0.95rem;
+        }
+
+        /* ===== HORIZONTAL RULE ===== */
+        .article hr {
+            border: none;
+            height: 1px;
+            background: var(--border-light);
+            margin: 48px 0;
+        }
+
+        /* ===== BLOCKQUOTE ===== */
+        blockquote {
+            margin: 28px 0;
+            padding: 20px 24px;
+            background: var(--bg-card);
+            border-left: 3px solid var(--accent);
+            border-radius: 0 8px 8px 0;
+            font-size: 1.1rem;
+            font-style: italic;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        blockquote cite {
+            display: block;
+            margin-top: 12px;
+            font-style: normal;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        /* ===== BACK TO TOP ===== */
+        .back-to-top {
+            position: fixed;
+            bottom: 32px;
+            right: 32px;
+            width: 44px;
+            height: 44px;
+            background: var(--accent);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+            z-index: 100;
+        }
+
+        .back-to-top.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .back-to-top:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+        }
+
+        .back-to-top svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* ===== PROGRESS BAR ===== */
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
+            z-index: 200;
+            transition: width 0.1s linear;
+        }
+
+        /* ===== FOOTER ===== */
+        .footer {
+            padding: 48px 0;
+            border-top: 1px solid var(--border-light);
+        }
+
+        .footer-cta {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .footer-cta h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+
+        .footer-cta p {
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+            font-size: 1.05rem;
+        }
+
+        .cta-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 32px;
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);
+        }
+
+        .cta-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 28px rgba(59, 130, 246, 0.4);
+        }
+
+        .cta-button svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .footer-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .footer-text {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .footer-links a {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover {
+            color: var(--accent);
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 640px) {
+            .container {
+                padding: 0 16px;
+            }
+
+            .hero {
+                padding: 48px 0 32px;
+            }
+
+            .hero-meta {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .meta-divider {
+                display: none;
+            }
+
+            .share-bar {
+                flex-wrap: wrap;
+            }
+
+            .toc {
+                padding: 20px 24px;
+            }
+
+            .stat-row {
+                grid-template-columns: 1fr;
+            }
+
+            .scenario-card,
+            .steps-box {
+                padding: 20px;
+            }
+
+            .article h2 {
+                font-size: 1.4rem;
+                margin-top: 48px;
+            }
+
+            .article h3 {
+                font-size: 1.1rem;
+            }
+
+            pre {
+                padding: 16px;
+                font-size: 0.82rem;
+            }
+
+            .back-to-top {
+                bottom: 20px;
+                right: 20px;
+            }
+
+            .footer-bottom {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+
+            thead th,
+            tbody td {
+                padding: 10px 12px;
+                font-size: 0.85rem;
+            }
+        }
+
+        /* ===== PRINT ===== */
+        @media print {
+            .share-bar,
+            .back-to-top,
+            .progress-bar,
+            .footer-cta {
+                display: none !important;
+            }
+
+            body {
+                background: white;
+                color: #1a1a1a;
+            }
+
+            .article h2,
+            .article h3 {
+                color: #1a1a1a;
+            }
+
+            .article p,
+            .article li {
+                color: #333;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Progress Bar -->
+    <div class="progress-bar" id="progressBar"></div>
+
+    <!-- Hero / Header -->
+    <header class="hero" id="top">
+        <div class="container">
+            <div class="hero-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                Free Playbook
+            </div>
+            <h1>AutoResearch: How to Improve Any Metric on Autopilot</h1>
+            <p class="hero-subtitle">The Karpathy Loop that runs 100 experiments while you sleep. The framework behind 700 autonomous experiments, 20 discovered optimizations, and a 19% performance gain overnight.</p>
+            <div class="hero-meta">
+                <div class="author-block">
+                    <div class="author-avatar">SK</div>
+                    <div class="author-info">
+                        <span class="author-name"><a href="https://linkedin.com/in/sandeepkumar" target="_blank" rel="noopener">Sandeep Kumar</a></span>
+                        <span class="author-detail">AI Automation &amp; Growth Systems</span>
+                    </div>
+                </div>
+                <div class="meta-divider"></div>
+                <div class="reading-time">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    14 min read
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Share Bar -->
+    <div class="container">
+        <div class="share-bar">
+            <span class="share-label">Share</span>
+            <a class="share-btn" href="https://www.linkedin.com/sharing/share-offsite/?url=" target="_blank" rel="noopener" id="shareLinkedIn" title="Share on LinkedIn">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                LinkedIn
+            </a>
+            <a class="share-btn" href="https://twitter.com/intent/tweet?text=AutoResearch%3A%20How%20to%20Improve%20Any%20Metric%20on%20Autopilot&url=" target="_blank" rel="noopener" id="shareTwitter" title="Share on X">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                X / Twitter
+            </a>
+            <button class="share-btn" id="copyLink" title="Copy link">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                Copy Link
+            </button>
+        </div>
+    </div>
+
+    <!-- Table of Contents -->
+    <div class="container">
+        <nav class="toc">
+            <div class="toc-title">Table of Contents</div>
+            <ol class="toc-list">
+                <li><a href="#what-is-autoresearch">What Is AutoResearch?</a></li>
+                <li><a href="#how-it-works">How It Works: The Framework</a></li>
+                <li><a href="#real-results">Real Results</a></li>
+                <li><a href="#beyond-ml">Beyond ML: The Pattern for ANY Metric</a></li>
+                <li><a href="#implementation">Implementation: Set Up Your Own Loop</a></li>
+                <li><a href="#critical-success-factors">Critical Success Factors</a></li>
+                <li><a href="#common-mistakes">Common Mistakes</a></li>
+                <li><a href="#the-big-picture">The Big Picture</a></li>
+                <li><a href="#quick-reference">Quick Reference: 60 Seconds</a></li>
+            </ol>
+        </nav>
+    </div>
+
+    <!-- Article Body -->
+    <main class="container">
+        <article class="article">
+
+            <!-- SECTION: What Is AutoResearch? -->
+            <h2 id="what-is-autoresearch">What Is AutoResearch?</h2>
+
+            <h3>The Problem With How We Optimize Today</h3>
+
+            <p>Here is how most optimization works. A human forms a hypothesis. They design an experiment. They run it. They wait hours, days, sometimes weeks for results. They analyze the data. They form a new hypothesis. Repeat.</p>
+
+            <p>One person. One experiment at a time. Serial processing in a parallel world.</p>
+
+            <p>The bottleneck is not compute. It is not data. It is the human in the loop, context-switching between tasks, sleeping, eating, attending meetings. The actual optimization work happens in short bursts between everything else.</p>
+
+            <h3>Karpathy's Insight</h3>
+
+            <p>Andrej Karpathy, former head of AI at Tesla and co-founder of OpenAI, asked a simple question: <strong>what if an AI agent ran the entire optimization loop autonomously?</strong></p>
+
+            <p>Not "assist with" the loop. Not "suggest hypotheses." <strong>Run the whole thing.</strong> Form hypotheses, modify code, execute experiments, evaluate results, keep what works, revert what doesn't. Over and over. While you sleep.</p>
+
+            <p>He built it in 630 lines of Python. MIT licensed. Published it on GitHub. Within days: <strong>41,700 stars.</strong></p>
+
+            <p>The project is called AutoResearch, and the core idea is deceptively simple: give an AI agent a metric to optimize, a file it can modify, and a time budget. Then walk away.</p>
+
+            <!-- SECTION: How It Works -->
+            <h2 id="how-it-works">How It Works: The Framework</h2>
+
+            <p>AutoResearch has three components. That's it. Three files that create an autonomous optimization engine.</p>
+
+            <h3>The Three Components</h3>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Component</th>
+                            <th>File</th>
+                            <th>Who Controls It</th>
+                            <th>Purpose</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Infrastructure</strong></td>
+                            <td><code>prepare.py</code></td>
+                            <td>Human (fixed)</td>
+                            <td>Data prep, tokenizer training, evaluation utilities</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Experiment Surface</strong></td>
+                            <td><code>train.py</code></td>
+                            <td>AI Agent (modifiable)</td>
+                            <td>Complete model, optimizer, training loop</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Instructions</strong></td>
+                            <td><code>program.md</code></td>
+                            <td>Human (maintained)</td>
+                            <td>Guides agent behavior, defines constraints</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p><strong><code>prepare.py</code></strong> handles everything the agent should never touch: downloading datasets, training tokenizers, building evaluation pipelines. This is your foundation. Locked down. Deterministic.</p>
+
+            <p><strong><code>train.py</code></strong> is the playground. This single file contains the complete training pipeline: model architecture, optimizer configuration, learning rate schedules, batch sizes, everything. The agent can modify any part of it.</p>
+
+            <p><strong><code>program.md</code></strong> is the skill definition for the AI. It tells the agent what metric to optimize, what constraints to respect, and how to approach experimentation. Think of it as a detailed brief you would give a new hire.</p>
+
+            <h3>The Loop</h3>
+
+            <p>Here is what happens when you start a run:</p>
+
+            <ol>
+                <li>The agent reads <code>program.md</code> for instructions and context.</li>
+                <li>The agent forms a hypothesis. Example: "Increasing the learning rate by 10% during the warmup phase may reduce validation loss."</li>
+                <li>The agent modifies <code>train.py</code> to implement the change.</li>
+                <li>The experiment runs for exactly 5 minutes. Fixed budget. No exceptions.</li>
+                <li>The agent evaluates the result: validation bits per byte (val_bpb). Lower is better.</li>
+                <li>If the metric improved: the change is kept. If not: the change is reverted.</li>
+                <li>The agent forms a new hypothesis informed by what it just learned.</li>
+                <li>Repeat.</li>
+            </ol>
+
+            <p>At roughly 12 experiments per hour, that is <strong>100 experiments in an overnight run</strong>. 100 hypotheses formed, tested, and evaluated without a single human interaction.</p>
+
+            <!-- SECTION: Real Results -->
+            <h2 id="real-results">Real Results</h2>
+
+            <div class="stat-row">
+                <div class="stat-card">
+                    <div class="stat-value">700</div>
+                    <div class="stat-label">Experiments Run</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">20</div>
+                    <div class="stat-label">Optimizations Found</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">19%</div>
+                    <div class="stat-label">Performance Gain</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">41.7K</div>
+                    <div class="stat-label">GitHub Stars</div>
+                </div>
+            </div>
+
+            <h3>Karpathy's Original Run</h3>
+
+            <p>Karpathy let AutoResearch run for 2 days on a language model training task. The numbers:</p>
+
+            <ul>
+                <li><strong>700 experiments</strong> executed</li>
+                <li><strong>20 optimizations</strong> discovered and kept</li>
+                <li><strong>11% speedup</strong> when the winning changes were applied to a larger model</li>
+            </ul>
+
+            <p>Twenty genuine improvements found by an agent running unsupervised. Some of those optimizations were ideas a human researcher might take weeks to stumble upon.</p>
+
+            <h3>Shopify CEO Tobias Lutke</h3>
+
+            <p>Tobias Lutke, CEO of Shopify, ran AutoResearch overnight on internal company data. His results:</p>
+
+            <ul>
+                <li><strong>37 experiments</strong> in one night</li>
+                <li><strong>19% performance gain</strong> on the target metric</li>
+            </ul>
+
+            <p>One night. No engineer time. A 19% improvement waiting in the commit history when the team arrived the next morning.</p>
+
+            <h3>Community Adoption</h3>
+
+            <p>The open-source community moved fast:</p>
+
+            <ul>
+                <li>41,700 GitHub stars within days of release</li>
+                <li>Ports to MacOS (MLX framework) for Apple Silicon</li>
+                <li>Windows compatibility patches</li>
+                <li>AMD GPU support</li>
+                <li>Forks adapting the pattern to domains beyond ML</li>
+            </ul>
+
+            <!-- SECTION: Beyond ML -->
+            <h2 id="beyond-ml">Beyond ML: The AutoResearch Pattern for ANY Metric</h2>
+
+            <p>Here is where it gets interesting for people who don't train neural networks.</p>
+
+            <p>The AutoResearch pattern is not about machine learning. It is about <strong>autonomous, iterative optimization</strong>. The pattern applies anywhere you have three things:</p>
+
+            <ol>
+                <li><strong>A measurable metric</strong> you want to improve</li>
+                <li><strong>Variables you can change</strong> that influence that metric</li>
+                <li><strong>Fast enough feedback loops</strong> to evaluate changes</li>
+            </ol>
+
+            <p>That describes almost every business optimization problem.</p>
+
+            <!-- Scenario 1 -->
+            <div class="scenario-card">
+                <h4>Scenario 1: Cold Email Optimization</h4>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr><th>Element</th><th>Details</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><strong>Metric</strong></td><td>Reply rate</td></tr>
+                            <tr><td><strong>Variables</strong></td><td>Subject line, opening sentence, CTA, send time</td></tr>
+                            <tr><td><strong>Feedback speed</strong></td><td>24-48 hours per batch</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p><strong>The loop:</strong> Generate 10 email variants using an LLM. Send each to a test segment of 50-100 recipients. Wait 48 hours. Measure reply rates. Analyze what worked: was it the question-based subject line? The personalized opener? The soft CTA? Feed findings into the next generation of variants.</p>
+                <p><strong>Expected trajectory:</strong> Most cold email campaigns start at 2-4% reply rates. After 4-6 weeks of autonomous iteration (5-8 cycles), teams consistently reach 8-12%.</p>
+            </div>
+
+            <!-- Scenario 2 -->
+            <div class="scenario-card">
+                <h4>Scenario 2: Landing Page Conversion</h4>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr><th>Element</th><th>Details</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><strong>Metric</strong></td><td>Conversion rate (visitor to signup/purchase)</td></tr>
+                            <tr><td><strong>Variables</strong></td><td>Headlines, subtext, CTAs, social proof placement, layout</td></tr>
+                            <tr><td><strong>Feedback speed</strong></td><td>200-500 visitors per variant</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p><strong>The loop:</strong> Generate page variants with different headlines, value propositions, and CTA copy. Deploy via A/B testing infrastructure. Collect data until statistical significance (minimum 200 visitors per variant). Analyze winners. Generate the next round of variants informed by what worked.</p>
+                <p><strong>Expected trajectory:</strong> 15-40% improvement in conversion rate over 8-12 weeks. The compounding effect is significant: a 3% baseline conversion moving to 4.2% is a 40% revenue increase from the same traffic.</p>
+            </div>
+
+            <!-- Scenario 3 -->
+            <div class="scenario-card">
+                <h4>Scenario 3: Paid Ad Copy</h4>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr><th>Element</th><th>Details</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><strong>Metric</strong></td><td>Click-through rate (CTR) and cost per acquisition (CPA)</td></tr>
+                            <tr><td><strong>Variables</strong></td><td>Headlines, descriptions, creative formats, audience targeting</td></tr>
+                            <tr><td><strong>Feedback speed</strong></td><td>24-72 hours with sufficient budget</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p><strong>The loop:</strong> Generate ad copy variants. Deploy via platform APIs (Google Ads, Meta Ads). Set budget caps and performance floors as guardrails (pause any variant spending more than $X with CTR below Y%). Measure after minimum impressions threshold. Iterate.</p>
+                <div class="callout">
+                    <svg class="callout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    <p>The guardrails are critical here. Unlike a training loop where a bad experiment costs 5 minutes of compute, a bad ad variant costs real money. Build in hard stops.</p>
+                </div>
+            </div>
+
+            <!-- Scenario 4 -->
+            <div class="scenario-card">
+                <h4>Scenario 4: Newsletter Engagement</h4>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr><th>Element</th><th>Details</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><strong>Metric</strong></td><td>Open rate, click-through rate</td></tr>
+                            <tr><td><strong>Variables</strong></td><td>Subject lines, preview text, send timing, content format</td></tr>
+                            <tr><td><strong>Feedback speed</strong></td><td>24-48 hours per send</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p><strong>The loop:</strong> Generate subject line and preview text variants. A/B test across subscriber segments. Measure opens and clicks at the 48-hour mark. Analyze patterns (do questions outperform statements? does personalization help?). Feed learnings into the next send.</p>
+                <p>With a 2-3x/week send cadence, you can run 8-12 experiments per month. Over a quarter, that is 24-36 tested hypotheses on a single channel.</p>
+            </div>
+
+            <!-- Scenario 5 -->
+            <div class="scenario-card">
+                <h4>Scenario 5: Pricing and Offer Framing</h4>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr><th>Element</th><th>Details</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><strong>Metric</strong></td><td>Revenue per visitor, average order value (AOV)</td></tr>
+                            <tr><td><strong>Variables</strong></td><td>Offer structures, discount presentations, upsell sequences, pricing page layout</td></tr>
+                            <tr><td><strong>Feedback speed</strong></td><td>Varies by traffic volume</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p><strong>The loop:</strong> Test different framings of the same offer. "Save $50" vs. "Save 25%" vs. "Get 3 months free." Test upsell timing, bundle structures, and anchor pricing. Measure revenue per visitor, not just conversion rate (a lower conversion at a higher price point can win).</p>
+                <p>This is the <strong>highest-impact application</strong> of the pattern. Small pricing improvements compound directly into revenue.</p>
+            </div>
+
+            <!-- SECTION: Implementation -->
+            <h2 id="implementation">Implementation: How to Set Up Your Own AutoResearch Loop</h2>
+
+            <h3>For ML/Technical Users</h3>
+
+            <p>If you want to run Karpathy's original AutoResearch on a model training task:</p>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-dots">
+                        <span class="code-dot"></span>
+                        <span class="code-dot"></span>
+                        <span class="code-dot"></span>
+                    </div>
+                    <span class="code-lang">Bash</span>
+                </div>
+                <pre><code><span class="token-comment"># Step 1: Clone the repository</span>
+<span class="token-keyword">git</span> clone https://github.com/karpathy/autoresearch
+<span class="token-keyword">cd</span> autoresearch
+
+<span class="token-comment"># Step 2: Install dependencies</span>
+<span class="token-keyword">uv</span> sync
+
+<span class="token-comment"># Step 3: Prepare your data</span>
+<span class="token-keyword">uv</span> run prepare.py
+
+<span class="token-comment"># Step 4: Test a manual training run</span>
+<span class="token-keyword">uv</span> run train.py
+
+<span class="token-comment"># Step 5: Point your AI agent at program.md</span>
+<span class="token-comment"># Use Claude Code, OpenAI Codex, or any capable coding agent</span>
+<span class="token-comment"># The agent reads program.md and begins the loop</span>
+
+<span class="token-comment"># Step 6: Let it run overnight</span>
+<span class="token-comment"># ~12 experiments/hour = ~100 experiments in 8 hours</span></code></pre>
+            </div>
+
+            <p>Requirements: a GPU with sufficient VRAM for your model, Python 3.10+, and an AI coding agent with file system access.</p>
+
+            <h3>For Business Users: The 4-Week Ramp</h3>
+
+            <p>You don't need to run the original repo. You need to build the pattern for your domain. Here is a realistic timeline.</p>
+
+            <div class="steps-box">
+                <h4>Week-by-Week Ramp</h4>
+                <p><strong>Week 1: Variant Generation</strong><br>
+                Pick one metric and one variable. Email subject lines are a good starting point. Set up an LLM prompt that generates 10 variants given your product, audience, and previous winners. Test the generation quality manually. Refine the prompt until variants are usable without human editing.</p>
+
+                <p><strong>Week 2: Automated Performance Retrieval</strong><br>
+                Connect to your platform's API (Mailchimp, HubSpot, Google Analytics, whatever you use). Build a script that pulls performance data for each variant. Automate the "measure" step so no human needs to log in and check dashboards.</p>
+
+                <p><strong>Week 3: Programmatic Deployment</strong><br>
+                This is the hard part. Set up API connections to deploy variants without manual intervention. For email, this means programmatically creating A/B test campaigns. For landing pages, this means deploying variants via your CMS or testing tool API. For ads, this means using the ad platform's API.</p>
+
+                <p><strong>Week 4: The Full Loop</strong><br>
+                Connect generation, deployment, measurement, and analysis into one pipeline. Add autonomous scheduling so it runs on a cron job or event trigger. The loop runs itself: generate variants, deploy, wait for data, analyze, generate the next round.</p>
+            </div>
+
+            <h3>Minimum Technical Components</h3>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Component</th>
+                            <th>Purpose</th>
+                            <th>Examples</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Data source access</strong></td>
+                            <td>Pull performance metrics</td>
+                            <td>Platform APIs, analytics APIs</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Content generation</strong></td>
+                            <td>Create test variants</td>
+                            <td>Claude API, GPT API, any LLM</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Deployment automation</strong></td>
+                            <td>Push variants live</td>
+                            <td>Platform APIs, CMS APIs, ad APIs</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Autonomous scheduling</strong></td>
+                            <td>Run without triggers</td>
+                            <td>Cron jobs, n8n workflows, GitHub Actions</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Findings documentation</strong></td>
+                            <td>Compound learnings</td>
+                            <td>Markdown logs, database entries</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="callout">
+                <svg class="callout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                <p>The findings documentation piece is often overlooked. Each cycle must inform the next. Without it, you are running random experiments, not compounding intelligence.</p>
+            </div>
+
+            <!-- SECTION: Critical Success Factors -->
+            <h2 id="critical-success-factors">Critical Success Factors</h2>
+
+            <h3>1. One Metric, One Variable</h3>
+
+            <p>Do not test everything at once. If you change the subject line AND the send time AND the opening sentence, you have no idea which change drove the result. Isolate variables. Test one thing per cycle.</p>
+
+            <p>This is the single most common mistake. Resist the temptation to "test more" per cycle. Speed comes from fast cycles, not from cramming more variables into each one.</p>
+
+            <h3>2. Statistical Rigor</h3>
+
+            <p>Minimum sample sizes before declaring a winner:</p>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Channel</th>
+                            <th>Minimum Per Variant</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Email (open rate)</td><td>50 recipients</td></tr>
+                        <tr><td>Email (reply rate)</td><td>100 recipients</td></tr>
+                        <tr><td>Landing page</td><td>200 visitors</td></tr>
+                        <tr><td>Paid ads</td><td>1,000 impressions</td></tr>
+                        <tr><td>Pricing tests</td><td>500 visitors</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p>Acting on small samples is worse than not testing at all. You will "learn" patterns that are just noise, then optimize toward randomness.</p>
+
+            <h3>3. Feedback Loop Closure</h3>
+
+            <p>Previous learnings MUST inform the next round of variants. This is what separates AutoResearch from random A/B testing.</p>
+
+            <p><strong>Bad:</strong> Generate 10 random variants each cycle.<br>
+            <strong>Good:</strong> Feed the top 3 winners and bottom 3 losers from last cycle into the generation prompt. Ask the LLM to analyze what worked, hypothesize why, and generate variants that push the winning patterns further.</p>
+
+            <h3>4. Extended Runway</h3>
+
+            <p>Meaningful gains emerge after 4-6 weeks. The first 1-2 weeks are calibration: the system is learning what moves the needle at all. Weeks 3-4 are where compounding kicks in as the agent starts combining multiple winning elements.</p>
+
+            <p>Do not judge the system by week 1 results.</p>
+
+            <h3>5. Human Oversight</h3>
+
+            <p>Check in on findings every 3-5 cycles. Look for:</p>
+
+            <ul>
+                <li>Errors in data collection (are metrics being measured correctly?)</li>
+                <li>Overfitting to a narrow segment (does a "winning" variant only work on one audience?)</li>
+                <li>Ethical drift (is the AI generating manipulative copy to hit the metric?)</li>
+                <li>Metric gaming (is the system finding loopholes rather than genuine improvements?)</li>
+            </ul>
+
+            <p><strong>Autonomous does not mean unsupervised.</strong></p>
+
+            <h3>6. Cross-Channel Compounding</h3>
+
+            <p>What works in email informs ad copy. What works in ads informs landing pages. What works on landing pages informs the sales pitch.</p>
+
+            <p>Once you have findings from one channel, feed them into variant generation for adjacent channels. The insight "question-based headlines outperform statement-based headlines by 23%" applies far beyond the channel where you discovered it.</p>
+
+            <!-- SECTION: Common Mistakes -->
+            <h2 id="common-mistakes">Common Mistakes</h2>
+
+            <div class="highlight-box">
+                <p><strong>1. Testing too many variables simultaneously.</strong><br>
+                You cannot learn what worked when everything changed. One variable per cycle. Always.</p>
+            </div>
+
+            <div class="highlight-box">
+                <p><strong>2. Acting on insufficient sample sizes.</strong><br>
+                50 data points is not a pattern. It is noise. Wait for statistical significance. The automation is patient even if you are not.</p>
+            </div>
+
+            <div class="highlight-box">
+                <p><strong>3. Optimizing the wrong metric.</strong><br>
+                Open rates are a vanity metric if they don't correlate with revenue. Make sure your target metric connects to a business outcome. Optimize for reply rate, not open rate. Optimize for revenue per visitor, not page views.</p>
+            </div>
+
+            <div class="highlight-box">
+                <p><strong>4. Not feeding learnings back into the loop.</strong><br>
+                Without compounding intelligence, you are running isolated experiments. Each cycle must build on the last. This requires explicit documentation of findings and structured prompts that incorporate previous results.</p>
+            </div>
+
+            <div class="highlight-box">
+                <p><strong>5. Stopping too early.</strong><br>
+                The biggest gains come from compounding small improvements over time. A 3% improvement per cycle across 12 cycles is a 42% total improvement. But you only see the 3% if you look at a single cycle. The magic is in the persistence.</p>
+            </div>
+
+            <!-- SECTION: The Big Picture -->
+            <h2 id="the-big-picture">The Big Picture</h2>
+
+            <blockquote>
+                "All LLM frontier labs will do this. It's the final boss battle."
+                <cite>-- Andrej Karpathy</cite>
+            </blockquote>
+
+            <p>His vision goes beyond a single agent running a single optimization loop. The endgame is multiple agents exploring different optimization paths in parallel. One agent testing learning rate schedules while another explores architecture changes while a third experiments with data augmentation.</p>
+
+            <blockquote>
+                "The goal is not to emulate a single PhD student. It is to emulate a research community of them."
+                <cite>-- Andrej Karpathy</cite>
+            </blockquote>
+
+            <p>This reframes the role of the human. You are no longer the researcher. You are the <strong>research director</strong>. You set the objectives, define the constraints, allocate resources, and review findings. The agents do the grunt work: the hundreds of small experiments that map the optimization landscape.</p>
+
+            <p>And this is not limited to ML researchers in San Francisco. Anyone with a measurable metric and controllable variables can run this pattern. A solo founder optimizing cold outreach. A marketing team iterating on ad copy. A product team refining onboarding flows.</p>
+
+            <p>The pattern is universal. The tooling is open source. The only question is whether you set up the loop or keep running experiments one at a time.</p>
+
+            <!-- SECTION: Quick Reference -->
+            <h2 id="quick-reference">Quick Reference: AutoResearch in 60 Seconds</h2>
+
+            <div class="steps-box">
+                <h4>The Complete Loop</h4>
+                <ol>
+                    <li>Pick <strong>ONE metric</strong> to optimize</li>
+                    <li>Identify the variables that influence it</li>
+                    <li>Set up automated measurement (API access to your data)</li>
+                    <li>Set up automated variant generation (LLM prompt)</li>
+                    <li>Set up automated deployment (platform APIs)</li>
+                    <li>Connect the loop: generate, deploy, measure, analyze, repeat</li>
+                    <li>Run for 4-6 weeks minimum</li>
+                    <li>Review findings every 3-5 cycles</li>
+                    <li>Feed winning patterns into adjacent channels</li>
+                </ol>
+            </div>
+
+            <p style="font-size: 1.15rem; font-weight: 500; color: var(--text-primary); text-align: center; margin-top: 40px;">The loop does the work. You set the direction.</p>
+
+        </article>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-cta">
+                <h3>Want more AI automation playbooks?</h3>
+                <p>Follow for weekly breakdowns of cutting-edge AI tools, frameworks, and patterns that compound results over time.</p>
+                <a href="https://linkedin.com/in/sandeepkumar" target="_blank" rel="noopener" class="cta-button">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                    Follow on LinkedIn
+                </a>
+            </div>
+            <div class="footer-bottom">
+                <span class="footer-text">Sandeep Kumar. Part of the AutoResearch Pattern series.</span>
+                <div class="footer-links">
+                    <a href="https://linkedin.com/in/sandeepkumar" target="_blank" rel="noopener">LinkedIn</a>
+                    <a href="#top">Back to Top</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Back to Top Button -->
+    <button class="back-to-top" id="backToTop" aria-label="Back to top">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+    </button>
+
+    <script>
+        // Progress bar
+        function updateProgress() {
+            const scrollTop = window.scrollY;
+            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+            document.getElementById('progressBar').style.width = progress + '%';
+        }
+
+        // Back to top button visibility
+        function toggleBackToTop() {
+            const btn = document.getElementById('backToTop');
+            if (window.scrollY > 400) {
+                btn.classList.add('visible');
+            } else {
+                btn.classList.remove('visible');
+            }
+        }
+
+        window.addEventListener('scroll', function() {
+            updateProgress();
+            toggleBackToTop();
+        }, { passive: true });
+
+        document.getElementById('backToTop').addEventListener('click', function() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        // Copy link
+        document.getElementById('copyLink').addEventListener('click', function() {
+            const btn = this;
+            navigator.clipboard.writeText(window.location.href).then(function() {
+                btn.classList.add('copied');
+                btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Copied!';
+                setTimeout(function() {
+                    btn.classList.remove('copied');
+                    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> Copy Link';
+                }, 2000);
+            });
+        });
+
+        // Share URL setup -- update share links with current page URL
+        (function() {
+            var url = encodeURIComponent(window.location.href);
+            var title = encodeURIComponent('AutoResearch: How to Improve Any Metric on Autopilot');
+            var linkedIn = document.getElementById('shareLinkedIn');
+            var twitter = document.getElementById('shareTwitter');
+            if (linkedIn) {
+                linkedIn.href = 'https://www.linkedin.com/sharing/share-offsite/?url=' + url;
+            }
+            if (twitter) {
+                twitter.href = 'https://twitter.com/intent/tweet?text=' + title + '&url=' + url;
+            }
+        })();
+    </script>
+</body>
+</html>
